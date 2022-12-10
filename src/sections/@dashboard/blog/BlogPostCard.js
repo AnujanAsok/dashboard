@@ -24,14 +24,14 @@ const StyledTitle = styled(Link)({
   WebkitBoxOrient: 'vertical',
 });
 
-const StyledAvatar = styled(Avatar)(({ theme }) => ({
-  zIndex: 9,
-  width: 32,
-  height: 32,
-  position: 'absolute',
-  left: theme.spacing(3),
-  bottom: theme.spacing(-2),
-}));
+// const StyledAvatar = styled(Avatar)(({ theme }) => ({
+//   zIndex: 9,
+//   width: 32,
+//   height: 32,
+//   position: 'absolute',
+//   left: theme.spacing(3),
+//   bottom: theme.spacing(-2),
+// }));
 
 const StyledInfo = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -44,9 +44,10 @@ const StyledInfo = styled('div')(({ theme }) => ({
 const StyledCover = styled('img')({
   top: 0,
   width: '100%',
-  height: '100%',
-  objectFit: 'cover',
+  height: '125%',
+  objectFit: 'contain',
   position: 'absolute',
+  padding: '10px',
 });
 
 // ----------------------------------------------------------------------
@@ -58,8 +59,8 @@ BlogPostCard.propTypes = {
 
 export default function BlogPostCard({ post, index }) {
   const { cover, title, view, comment, share, author, createdAt } = post;
-  const latestPostLarge = index === 0;
-  const latestPost = index === 1 || index === 2;
+  // const latestPostLarge = index === 0;
+  // const latestPost = index === 1 || index === 2;
 
   const POST_INFO = [
     { number: comment, icon: 'eva:message-circle-fill' },
@@ -68,27 +69,16 @@ export default function BlogPostCard({ post, index }) {
   ];
 
   return (
-    <Grid item xs={12} sm={latestPostLarge ? 12 : 6} md={latestPostLarge ? 6 : 3}>
+    <Grid item xs={12} sm={6} md={3}>
       <Card sx={{ position: 'relative' }}>
         <StyledCardMedia
           sx={{
-            ...((latestPostLarge || latestPost) && {
-              pt: 'calc(100% * 4 / 3)',
-              '&:after': {
-                top: 0,
-                content: "''",
-                width: '100%',
-                height: '100%',
-                position: 'absolute',
-                bgcolor: (theme) => alpha(theme.palette.grey[900], 0.72),
-              },
-            }),
-            ...(latestPostLarge && {
+            ...{
               pt: {
                 xs: 'calc(100% * 4 / 3)',
                 sm: 'calc(100% * 3 / 4.66)',
               },
-            }),
+            },
           }}
         >
           <SvgColor
@@ -101,22 +91,9 @@ export default function BlogPostCard({ post, index }) {
               bottom: -15,
               position: 'absolute',
               color: 'background.paper',
-              ...((latestPostLarge || latestPost) && { display: 'none' }),
             }}
           />
-          <StyledAvatar
-            alt={author.name}
-            src={author.avatarUrl}
-            sx={{
-              ...((latestPostLarge || latestPost) && {
-                zIndex: 9,
-                top: 24,
-                left: 24,
-                width: 40,
-                height: 40,
-              }),
-            }}
-          />
+          {/* <StyledAvatar alt={author.name} src={author.avatarUrl} sx={{}} /> */}
 
           <StyledCover alt={title} src={cover} />
         </StyledCardMedia>
@@ -124,15 +101,10 @@ export default function BlogPostCard({ post, index }) {
         <CardContent
           sx={{
             pt: 4,
-            ...((latestPostLarge || latestPost) && {
-              bottom: 0,
-              width: '100%',
-              position: 'absolute',
-            }),
           }}
         >
           <Typography gutterBottom variant="caption" sx={{ color: 'text.disabled', display: 'block' }}>
-            {fDate(createdAt)}
+            Uploaded On: {fDate(createdAt)}
           </Typography>
 
           <StyledTitle
@@ -140,10 +112,7 @@ export default function BlogPostCard({ post, index }) {
             variant="subtitle2"
             underline="hover"
             sx={{
-              ...(latestPostLarge && { typography: 'h5', height: 60 }),
-              ...((latestPostLarge || latestPost) && {
-                color: 'common.white',
-              }),
+              ...{ typography: 'h5', height: 60 },
             }}
           >
             {title}
@@ -157,9 +126,6 @@ export default function BlogPostCard({ post, index }) {
                   display: 'flex',
                   alignItems: 'center',
                   ml: index === 0 ? 0 : 1.5,
-                  ...((latestPostLarge || latestPost) && {
-                    color: 'grey.500',
-                  }),
                 }}
               >
                 <Iconify icon={info.icon} sx={{ width: 16, height: 16, mr: 0.5 }} />

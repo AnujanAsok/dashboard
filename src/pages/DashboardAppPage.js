@@ -1,9 +1,13 @@
 import { Helmet } from 'react-helmet-async';
 import { faker } from '@faker-js/faker';
+import { useState, useEffect } from 'react';
+
 // @mui
 import { useTheme } from '@mui/material/styles';
 import { Grid, Container, Typography } from '@mui/material';
+import { supabase } from '../utils/supabase_client';
 // components
+
 import Iconify from '../components/iconify';
 // sections
 import {
@@ -21,12 +25,25 @@ import {
 // ----------------------------------------------------------------------
 
 export default function DashboardAppPage() {
+  const [giftMetrics, setGiftMetrics] = useState({ gift_frequency: '' });
   const theme = useTheme();
+
+  const fetchMetrics = async () => {
+    const { data } = await supabase.from('gifting_metrics').select('*');
+    setGiftMetrics(data[0]);
+  };
+
+  useEffect(() => {
+    fetchMetrics();
+  }, []);
+
+  const dates = Object.entries(giftMetrics.gift_frequency).map((date) => date[1].date);
+  const giftAmount = Object.entries(giftMetrics.gift_frequency).map((date) => date[1].amount);
 
   return (
     <>
       <Helmet>
-        <title> Dashboard | Minimal UI </title>
+        <title> Overview </title>
       </Helmet>
 
       <Container maxWidth="xl">
@@ -35,70 +52,89 @@ export default function DashboardAppPage() {
         </Typography>
 
         <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Weekly Sales" total={714000} icon={'ant-design:android-filled'} />
+          <Grid item xs={12} sm={6} md={4}>
+            <AppWidgetSummary title="Starting Budget" total={50000} icon={'ph:money-fill'} />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="New Users" total={1352831} color="info" icon={'ant-design:apple-filled'} />
+          <Grid item xs={12} sm={6} md={4}>
+            <AppWidgetSummary
+              title="Total Spend"
+              total={giftMetrics.total_spend}
+              color="info"
+              icon={'ri:money-dollar-circle-fill'}
+            />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Item Orders" total={1723315} color="warning" icon={'ant-design:windows-filled'} />
+          <Grid item xs={12} sm={6} md={4}>
+            <AppWidgetSummary
+              title="Upcoming Launch Date"
+              date={'10/01/2022'}
+              color="warning"
+              icon={'bi:calendar-date'}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <AppWidgetSummary
+              title="Cost Per Gift"
+              total={giftMetrics.cost_per_gift}
+              color="success"
+              icon={'bxs:gift'}
+            />
           </Grid>
 
-          <Grid item xs={12} sm={6} md={3}>
-            <AppWidgetSummary title="Bug Reports" total={234} color="error" icon={'ant-design:bug-filled'} />
+          <Grid item xs={12} sm={6} md={4}>
+            <AppWidgetSummary
+              title="Satisfaction Rate"
+              percentage={giftMetrics.satisfaction_rate}
+              icon={'mdi:emoticon-happy'}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={4}>
+            <AppWidgetSummary
+              title="Total Mentions"
+              number={giftMetrics.total_mentions}
+              color="error"
+              icon={'ion:social-rss'}
+            />
           </Grid>
 
           <Grid item xs={12} md={6} lg={8}>
             <AppWebsiteVisits
-              title="Website Visits"
+              title="Total Sends Over Last 12 Months"
               subheader="(+43%) than last year"
-              chartLabels={[
-                '01/01/2003',
-                '02/01/2003',
-                '03/01/2003',
-                '04/01/2003',
-                '05/01/2003',
-                '06/01/2003',
-                '07/01/2003',
-                '08/01/2003',
-                '09/01/2003',
-                '10/01/2003',
-                '11/01/2003',
-              ]}
+              chartLabels={dates}
               chartData={[
                 {
-                  name: 'Team A',
+                  name: 'Gift Sends',
                   type: 'column',
                   fill: 'solid',
-                  data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30],
-                },
-                {
-                  name: 'Team B',
-                  type: 'area',
-                  fill: 'gradient',
-                  data: [44, 55, 41, 67, 22, 43, 21, 41, 56, 27, 43],
-                },
-                {
-                  name: 'Team C',
-                  type: 'line',
-                  fill: 'solid',
-                  data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39],
+                  data: giftAmount,
                 },
               ]}
             />
           </Grid>
 
           <Grid item xs={12} md={6} lg={4}>
+            <AppOrderTimeline
+              title="Holiday Timeline"
+              list={[...Array(5)].map((_, index) => ({
+                id: faker.datatype.uuid(),
+                title: ['AAPI Month', 'Hispanic Heritage Month', 'Christmas', 'Eid/Ramadan', 'Diwali'][index],
+                type: `holiday${index + 1}`,
+                time: faker.date.future(),
+              }))}
+            />
+          </Grid>
+
+          <Grid item xs={12} md={6} lg={4}>
             <AppCurrentVisits
-              title="Current Visits"
+              title="Gifts By Occasion"
               chartData={[
-                { label: 'America', value: 4344 },
-                { label: 'Asia', value: 5435 },
-                { label: 'Europe', value: 1443 },
-                { label: 'Africa', value: 4443 },
+                { label: 'Christmas', value: 4344 },
+                { label: 'Eid/Ramadan', value: 5435 },
+                { label: 'Diwali', value: 1443 },
+                { label: 'Hispanic Heritage Month', value: 4443 },
               ]}
               chartColors={[
                 theme.palette.primary.main,
@@ -108,7 +144,7 @@ export default function DashboardAppPage() {
               ]}
             />
           </Grid>
-
+          {/* 
           <Grid item xs={12} md={6} lg={8}>
             <AppConversionRates
               title="Conversion Rates"
@@ -126,9 +162,9 @@ export default function DashboardAppPage() {
                 { label: 'United Kingdom', value: 1380 },
               ]}
             />
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={12} md={6} lg={4}>
+          {/* <Grid item xs={12} md={6} lg={4}>
             <AppCurrentSubject
               title="Current Subject"
               chartLabels={['English', 'History', 'Physics', 'Geography', 'Chinese', 'Math']}
@@ -139,9 +175,9 @@ export default function DashboardAppPage() {
               ]}
               chartColors={[...Array(6)].map(() => theme.palette.text.secondary)}
             />
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={12} md={6} lg={8}>
+          {/* <Grid item xs={12} md={6} lg={8}>
             <AppNewsUpdate
               title="News Update"
               list={[...Array(5)].map((_, index) => ({
@@ -152,9 +188,9 @@ export default function DashboardAppPage() {
                 postedAt: faker.date.recent(),
               }))}
             />
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={12} md={6} lg={4}>
+          {/* <Grid item xs={12} md={6} lg={4}>
             <AppOrderTimeline
               title="Order Timeline"
               list={[...Array(5)].map((_, index) => ({
@@ -170,9 +206,9 @@ export default function DashboardAppPage() {
                 time: faker.date.past(),
               }))}
             />
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={12} md={6} lg={4}>
+          {/* <Grid item xs={12} md={6} lg={4}>
             <AppTrafficBySite
               title="Traffic by Site"
               list={[
@@ -198,9 +234,9 @@ export default function DashboardAppPage() {
                 },
               ]}
             />
-          </Grid>
+          </Grid> */}
 
-          <Grid item xs={12} md={6} lg={8}>
+          {/* <Grid item xs={12} md={6} lg={8}>
             <AppTasks
               title="Tasks"
               list={[
@@ -211,7 +247,7 @@ export default function DashboardAppPage() {
                 { id: '5', label: 'Sprint Showcase' },
               ]}
             />
-          </Grid>
+          </Grid> */}
         </Grid>
       </Container>
     </>

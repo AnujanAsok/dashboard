@@ -53,10 +53,10 @@ function OrderItem({ item, isLast }) {
       <TimelineSeparator>
         <TimelineDot
           color={
-            (type === 'order1' && 'primary') ||
-            (type === 'order2' && 'success') ||
-            (type === 'order3' && 'info') ||
-            (type === 'order4' && 'warning') ||
+            (type === 'holiday1' && 'success') ||
+            (type === 'holiday2' && 'primary') ||
+            (type === 'holiday3' && 'info') ||
+            (type === 'holiday4' && 'warning') ||
             'error'
           }
         />

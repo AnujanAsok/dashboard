@@ -1,7 +1,8 @@
 import { Helmet } from 'react-helmet-async';
 import { filter } from 'lodash';
 import { sentenceCase } from 'change-case';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
 // @mui
 import {
   Card,
@@ -21,28 +22,29 @@ import {
   IconButton,
   TableContainer,
   TablePagination,
+  Modal,
+  Box,
+  TextField,
 } from '@mui/material';
-// components
 import { faker } from '@faker-js/faker';
-import { fDate } from '../utils/formatTime';
-import { fCurrency, fPercent } from '../utils/formatNumber';
 import { supabase } from '../utils/supabase_client';
+// components
 import Label from '../components/label';
 import Iconify from '../components/iconify';
 import Scrollbar from '../components/scrollbar';
 // sections
-import { UserListHead, CampaignListToolbar } from '../sections/@dashboard/user';
+import { UserListHead, UserListToolbar } from '../sections/@dashboard/user';
 // mock
-// import USERLIST from '../_mock/user';
+import USERLIST from '../_mock/contact';
 
 // ----------------------------------------------------------------------
 
 const TABLE_HEAD = [
   { id: 'name', label: 'Name', alignRight: false },
-  { id: 'date', label: 'Date', alignRight: false },
-  { id: 'budget', label: 'Campaign Budget', alignRight: false },
-  { id: 'isSpent', label: 'Total Spend', alignRight: false },
-  { id: 'engagement', label: 'Engagement Rate', alignRight: false },
+  { id: 'company', label: 'Company', alignRight: false },
+  { id: 'role', label: 'Role', alignRight: false },
+  { id: 'isVerified', label: 'Address Confirmation', alignRight: false },
+  { id: 'celebrate', label: 'Celebrates', alignRight: false },
   { id: '' },
 ];
 
@@ -77,7 +79,7 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function UserPage() {
+export default function Contacts() {
   const [open, setOpen] = useState(null);
 
   const [page, setPage] = useState(0);
@@ -92,26 +94,9 @@ export default function UserPage() {
 
   const [rowsPerPage, setRowsPerPage] = useState(5);
 
-  const [campaignStats, setCampaignStats] = useState([]);
+  const [openModal, setOpenModal] = useState(false);
 
-  const fetchMetrics = async () => {
-    const { data } = await supabase.from('campaigns').select('*');
-    setCampaignStats(data);
-  };
-
-  useEffect(() => {
-    fetchMetrics();
-  }, []);
-
-  console.log('campaign stats', campaignStats);
-
-  const USERLIST = campaignStats.map((stat, index) => ({
-    name: stat.name,
-    date: stat.date,
-    budget: fCurrency(stat.campaign_budget),
-    isSpent: fCurrency(stat.total_spend),
-    engagement: fPercent(stat.engagement_rate),
-  }));
+  const [userInfo, setUserInfo] = useState({});
 
   const handleOpenMenu = (event) => {
     setOpen(event.currentTarget);
@@ -151,6 +136,10 @@ export default function UserPage() {
     setSelected(newSelected);
   };
 
+  const closeModalMenu = () => {
+    setOpenModal(false);
+  };
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -165,6 +154,31 @@ export default function UserPage() {
     setFilterName(event.target.value);
   };
 
+  const sendNewUser = async () => {
+    setOpenModal(false);
+    const { data, error } = await supabase.from('client_info').insert([
+      {
+        client_name: faker.company.name(),
+        user_list: { name: userInfo.name, company_name: userInfo.company_name },
+      },
+    ]);
+
+    console.log('error', error);
+  };
+
+  const modalStyle = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 700,
+    bgcolor: 'background.paper',
+    border: '2px solid #000',
+    boxShadow: 24,
+    p: 4,
+    borderRadius: 5,
+  };
+
   const emptyRows = page > 0 ? Math.max(0, (1 + page) * rowsPerPage - USERLIST.length) : 0;
 
   const filteredUsers = applySortFilter(USERLIST, getComparator(order, orderBy), filterName);
@@ -174,25 +188,42 @@ export default function UserPage() {
   return (
     <>
       <Helmet>
-        <title> Campaigns </title>
+        <title> Contact List </title>
       </Helmet>
 
       <Container>
         <Stack direction="row" alignItems="center" justifyContent="space-between" mb={5}>
           <Typography variant="h4" gutterBottom>
-            Your Campaigns
+            User
           </Typography>
-          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />}>
-            New Campaign
+          <Button variant="contained" startIcon={<Iconify icon="eva:plus-fill" />} onClick={() => setOpenModal(true)}>
+            New User
           </Button>
         </Stack>
 
+        <Modal open={openModal} onClose={closeModalMenu}>
+          <Box sx={modalStyle}>
+            <Typography variant="h6">Add a Contact</Typography>
+            <TextField
+              variant="outlined"
+              label="Enter your contact's name"
+              sx={{ m: 3, width: 500 }}
+              onChange={(e) => setUserInfo({ ...userInfo, name: e.target.value })}
+            />
+            <TextField
+              variant="outlined"
+              label="What is your contact's role at your company"
+              sx={{ m: 3, width: 500 }}
+              onChange={(e) => setUserInfo({ ...userInfo, company_name: e.target.value })}
+            />
+            <Button variant="contained" onClick={sendNewUser}>
+              Add this contact
+            </Button>
+          </Box>
+        </Modal>
+
         <Card>
-          <CampaignListToolbar
-            numSelected={selected.length}
-            filterName={filterName}
-            onFilterName={handleFilterByName}
-          />
+          <UserListToolbar numSelected={selected.length} filterName={filterName} onFilterName={handleFilterByName} />
 
           <Scrollbar>
             <TableContainer sx={{ minWidth: 800 }}>
@@ -208,11 +239,11 @@ export default function UserPage() {
                 />
                 <TableBody>
                   {filteredUsers.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((row) => {
-                    const { id, name, budget, engagement, date, avatarUrl, isSpent } = row;
+                    const { id, name, role, status, company, avatarUrl, isVerified } = row;
                     const selectedUser = selected.indexOf(name) !== -1;
 
                     return (
-                      <TableRow hover key={id} tabIndex={-1} isVerified="checkbox" selected={selectedUser}>
+                      <TableRow hover key={id} tabIndex={-1} role="checkbox" selected={selectedUser}>
                         <TableCell padding="checkbox">
                           <Checkbox checked={selectedUser} onChange={(event) => handleClick(event, name)} />
                         </TableCell>
@@ -226,13 +257,15 @@ export default function UserPage() {
                           </Stack>
                         </TableCell>
 
-                        <TableCell align="left">{date}</TableCell>
+                        <TableCell align="left">{company}</TableCell>
 
-                        <TableCell align="left">{budget}</TableCell>
+                        <TableCell align="left">{role}</TableCell>
 
-                        <TableCell align="left">{isSpent}</TableCell>
+                        <TableCell align="left">{isVerified ? 'Yes' : 'No'}</TableCell>
 
-                        <TableCell align="left">{engagement}</TableCell>
+                        <TableCell align="left">
+                          <Label color={(status === 'None' && 'error') || 'success'}>{sentenceCase(status)}</Label>
+                        </TableCell>
 
                         <TableCell align="right">
                           <IconButton size="large" color="inherit" onClick={handleOpenMenu}>

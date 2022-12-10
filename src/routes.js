@@ -9,6 +9,7 @@ import LoginPage from './pages/LoginPage';
 import Page404 from './pages/Page404';
 import ProductsPage from './pages/ProductsPage';
 import DashboardAppPage from './pages/DashboardAppPage';
+import Contacts from './pages/Contacts';
 
 // ----------------------------------------------------------------------
 
@@ -20,9 +21,10 @@ export default function Router() {
       children: [
         { element: <Navigate to="/dashboard/app" />, index: true },
         { path: 'app', element: <DashboardAppPage /> },
-        { path: 'user', element: <UserPage /> },
-        { path: 'products', element: <ProductsPage /> },
-        { path: 'blog', element: <BlogPage /> },
+        { path: 'campaigns', element: <UserPage /> },
+        { path: 'start-a-new-campaign', element: <ProductsPage /> },
+        { path: 'contacts', element: <Contacts /> },
+        { path: 'documents', element: <BlogPage /> },
       ],
     },
     {
