@@ -162,8 +162,6 @@ export default function Contacts() {
         user_list: { name: userInfo.name, company_name: userInfo.company_name },
       },
     ]);
-
-    console.log('error', error);
   };
 
   const modalStyle = {
