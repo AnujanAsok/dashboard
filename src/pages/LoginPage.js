@@ -1,14 +1,16 @@
 import { Helmet } from 'react-helmet-async';
 // @mui
 import { styled } from '@mui/material/styles';
-import { Link, Container, Typography, Divider, Stack, Button } from '@mui/material';
+import { Link, Container, Typography, Divider, Stack, Button, Modal, Box, TextField } from '@mui/material';
 // hooks
+import { useState } from 'react';
 import useResponsive from '../hooks/useResponsive';
 // components
 import Logo from '../components/logo';
 import Iconify from '../components/iconify';
 // sections
 import { LoginForm } from '../sections/auth/login';
+import { supabase } from '../utils/supabase_client';
 
 // ----------------------------------------------------------------------
 
@@ -38,11 +40,37 @@ const StyledContent = styled('div')(({ theme }) => ({
   padding: theme.spacing(12, 0),
 }));
 
+const modalStyle = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 700,
+  bgcolor: 'background.paper',
+  border: '2px solid #000',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: 5,
+};
+
 // ----------------------------------------------------------------------
 
 export default function LoginPage() {
   const mdUp = useResponsive('up', 'md');
+  const [openModal, setOpenModal] = useState(false);
+  const [accountInfo, setAccountInfo] = useState({});
 
+  const closeModalMenu = () => {
+    setOpenModal(false);
+  };
+
+  const createAccount = async () => {
+    setOpenModal(false);
+    const { data, error } = await supabase.auth.signUp({
+      email: accountInfo.email,
+      password: accountInfo.password,
+    });
+  };
   return (
     <>
       <Helmet>
@@ -75,8 +103,31 @@ export default function LoginPage() {
 
             <Typography variant="body2" sx={{ mb: 5 }}>
               Don’t have an account? {''}
-              <Link variant="subtitle2">Get started</Link>
+              <Link variant="subtitle2" onClick={() => setOpenModal(true)}>
+                Get started
+              </Link>
             </Typography>
+
+            <Modal open={openModal} onClose={closeModalMenu}>
+              <Box sx={modalStyle}>
+                <Typography variant="h6">Create an account</Typography>
+                <TextField
+                  variant="outlined"
+                  label="Enter your email name"
+                  sx={{ m: 3, width: 500 }}
+                  onChange={(e) => setAccountInfo({ ...accountInfo, email: e.target.value })}
+                />
+                <TextField
+                  variant="outlined"
+                  label="Enter your password"
+                  sx={{ m: 3, width: 500 }}
+                  onChange={(e) => setAccountInfo({ ...accountInfo, password: e.target.value })}
+                />
+                <Button variant="contained" onClick={createAccount}>
+                  Create Account
+                </Button>
+              </Box>
+            </Modal>
 
             <Stack direction="row" spacing={2}>
               <Button fullWidth size="large" color="inherit" variant="outlined">
