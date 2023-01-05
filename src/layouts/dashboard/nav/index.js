@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 // @mui
 import { styled, alpha } from '@mui/material/styles';
@@ -8,6 +8,7 @@ import { Box, Link, Button, Drawer, Typography, Avatar, Stack } from '@mui/mater
 import account from '../../../_mock/account';
 // hooks
 import useResponsive from '../../../hooks/useResponsive';
+import { supabase } from '../../../utils/supabase_client';
 // components
 import Logo from '../../../components/logo';
 import Scrollbar from '../../../components/scrollbar';
@@ -34,10 +35,21 @@ Nav.propTypes = {
   onCloseNav: PropTypes.func,
 };
 
-export default function Nav({ openNav, onCloseNav }) {
+export default function Nav({ openNav, onCloseNav, status }) {
   const { pathname } = useLocation();
-
+  const [userAccount, setUserAccount] = useState({});
   const isDesktop = useResponsive('up', 'lg');
+
+  useEffect(() => {
+    if (status.userId) {
+      fetchUserData();
+    }
+  }, [status]);
+
+  const fetchUserData = async () => {
+    const { data } = await supabase.from('profiles').select('*').eq('id', status.userId);
+    setUserAccount(data[0]);
+  };
 
   useEffect(() => {
     if (openNav) {
@@ -64,7 +76,7 @@ export default function Nav({ openNav, onCloseNav }) {
 
             <Box sx={{ ml: 2 }}>
               <Typography variant="subtitle2" sx={{ color: 'text.primary' }}>
-                {account.displayName}
+                {userAccount.full_name}
               </Typography>
 
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>

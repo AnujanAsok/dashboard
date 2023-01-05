@@ -28,34 +28,41 @@ const holidayList = [
 ];
 
 const FirstPage = (props) => {
-  const { setCustomSelected, formData, setFormData } = props;
+  const { setCustomSelected, formData, setFormData, status, setFormSubmitted } = props;
   const [showBox, setShowBox] = useState(false);
   const [showCard, setShowCard] = useState(false);
+
+  console.log('formdata ', formData);
 
   const createCampaign = async () => {
     const { data, error } = await supabase.from('campaigns').insert([
       {
         name: formData.holiday,
         date: fDate(faker.date.future()),
-        campaign_budget: faker.random.numeric(4),
+        campaign_budget: formData.campaignBudget,
         total_spend: faker.random.numeric(4),
         engagement_rate: faker.random.numeric(2),
+        client_id: status.userId,
       },
     ]);
   };
 
   const handleClick = async () => {
-    const { data, error, status } = await supabase.from('unboxing_experience').insert([
+    const { data, error } = await supabase.from('unboxing_experience').insert([
       {
         timeline: formData.timeline,
         holiday: formData.holiday,
-        budget_range: formData.budget,
+        budget_range: formData.campaignBudget,
         additional_comments: formData.comments,
         box_type: formData.box_type,
         personal_message: formData.personal_message,
+        client_id: status.userId,
       },
     ]);
     createCampaign();
+    setFormSubmitted(true);
+    setShowCard(false);
+    setFormData({});
   };
 
   return (
@@ -88,35 +95,10 @@ const FirstPage = (props) => {
 
           <TextField
             variant="outlined"
-            label="Select your budget range"
-            select
-            placeholder="Pick your budget range from the list below"
-            onChange={(e) => setFormData({ ...formData, budget: e.target.value })}
-            value={formData.budget}
+            label="Enter your budget range"
+            onChange={(e) => setFormData({ ...formData, campaignBudget: e.target.value })}
             sx={{ width: 700, mt: 5 }}
-          >
-            <MenuItem key={1} value={'$0-$1000'}>
-              $0-$1000
-            </MenuItem>
-            <MenuItem key={2} value={'$1000-$5000'}>
-              $1000-$5000
-            </MenuItem>
-            <MenuItem key={3} value={'$5000-$10,000'}>
-              $5000-$10,000
-            </MenuItem>
-            <MenuItem key={4} value={'$10,000-$20,000'}>
-              $10,000-$20,000
-            </MenuItem>
-            <MenuItem key={5} value={'$20,000-$50,000'}>
-              $20,000-$50,000
-            </MenuItem>
-            <MenuItem key={6} value={'$50,000-$100,000'}>
-              $50,000-$100,000
-            </MenuItem>
-            <MenuItem key={7} value={'$100,000+'}>
-              $100,000+
-            </MenuItem>
-          </TextField>
+          />
 
           <TextField
             variant="outlined"

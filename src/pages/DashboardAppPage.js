@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet-async';
 import { faker } from '@faker-js/faker';
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 // @mui
 import { useTheme } from '@mui/material/styles';
@@ -24,14 +25,88 @@ import {
 
 // ----------------------------------------------------------------------
 
-export default function DashboardAppPage() {
+export default function DashboardAppPage(props) {
+  const { status, setStatus } = props;
   const [giftMetrics, setGiftMetrics] = useState({ gift_frequency: '' });
+  const [totalCampaignSpend, setTotalCampaignSpend] = useState(0);
+  const [remainingBudget, setRemainingBudget] = useState(0);
   const theme = useTheme();
 
-  const fetchMetrics = async () => {
-    const { data } = await supabase.from('gifting_metrics').select('*');
-    setGiftMetrics(data[0]);
+  // const user = supabase.auth.getUser(); // this works after the user has completed email verification
+  // console.log('user id ', user);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    sendDataToSupa();
+  }, []); // realtime changes for auth
+
+  useEffect(() => {
+    getTotalSpend();
+  }, []);
+
+  useEffect(() => {
+    getRemainingBudget();
+  }, [totalCampaignSpend]);
+
+  const sendDataToSupa = async () => {
+    const userSession = await supabase.auth.getSession();
+    console.log('session ', userSession.data.session.user.id);
+    setStatus({ ...status, userId: userSession.data.session.user.id });
+    if (status.phone && status.budget) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ phone: status.phone, budget: status.budget })
+        .eq('id', status.userId);
+    }
   };
+
+  const getTotalSpend = async () => {
+    const { data } = await supabase.from('campaigns').select('total_spend').eq('client_id', status.userId);
+    console.log('total spend from all campaigns ', data);
+    const total = data.reduce((a, b) => a + b.total_spend, 0);
+    const { data: newTotal, error } = await supabase
+      .from('gifting_metrics')
+      .update({ total_spend: total })
+      .eq('client_id', status.userId)
+      .select('total_spend');
+    setTotalCampaignSpend(newTotal[0]);
+  };
+
+  const getRemainingBudget = async () => {
+    const { data } = await supabase.from('profiles').select('budget').eq('id', status.userId);
+    setRemainingBudget(data[0]);
+    console.log(data);
+  };
+
+  // if()
+  // navigate('/login', { replace: true });
+
+  const fetchMetrics = async () => {
+    const { data } = await supabase.from('gifting_metrics').select('*').eq('client_id', status.userId);
+    setGiftMetrics(data[0]);
+    // const { error } = await supabase
+    // .from('profiles')
+    // .upsert([
+    //   {
+    //     email: accountInfo.email,
+    //     full_name: accountInfo.full_name,
+    //   },
+    // ]).eq('id', user.)
+  };
+
+  // const fetchUser = async () => {
+  //   console.log('status in fetch user', status);
+  //   const { error } = await supabase
+  //     .from('profiles')
+  //     .update([{ full_name: status.full_name, email: authTest.user.email }])
+  //     .eq('id', authTest.user.id);
+  // };
+
+  // useEffect(() => {
+  //   if (authTest.user) {
+  //     fetchUser();
+  //   }
+  // }, [authTest]);
 
   useEffect(() => {
     fetchMetrics();
@@ -53,13 +128,17 @@ export default function DashboardAppPage() {
 
         <Grid container spacing={3}>
           <Grid item xs={12} sm={6} md={4}>
-            <AppWidgetSummary title="Starting Budget" total={50000} icon={'ph:money-fill'} />
+            <AppWidgetSummary
+              title="Remaining Budget"
+              total={remainingBudget.budget - totalCampaignSpend.total_spend}
+              icon={'ph:money-fill'}
+            />
           </Grid>
 
           <Grid item xs={12} sm={6} md={4}>
             <AppWidgetSummary
               title="Total Spend"
-              total={giftMetrics.total_spend}
+              total={totalCampaignSpend.total_spend}
               color="info"
               icon={'ri:money-dollar-circle-fill'}
             />

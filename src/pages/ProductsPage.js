@@ -26,17 +26,14 @@ import { supabase } from '../utils/supabase_client';
 
 // ----------------------------------------------------------------------
 
-export default function ProductsPage() {
+export default function ProductsPage(props) {
   const [openFilter, setOpenFilter] = useState(false);
   const [customSelected, setCustomSelected] = useState(false);
-  const [formData, setFormData] = useState({
-    timeline: '',
-    holiday: '',
-    budget: '',
-    comments: '',
-    box_type: '',
-    personal_message: '',
-  });
+  const [formData, setFormData] = useState({});
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const { status } = props;
+
+  console.log('status in product ', status);
 
   const handleOpenFilter = () => {
     setOpenFilter(true);
@@ -83,14 +80,32 @@ export default function ProductsPage() {
         {productSection}
       </Collapse>
 
-      <Typography variant="h3" sx={{ my: 7 }}>
-        Step 2: Create Your Unboxing Experience
-      </Typography>
-      <Container>
-        <FormControl fullWidth>
-          <FirstPage setCustomSelected={setCustomSelected} formData={formData} setFormData={setFormData} />
-        </FormControl>
-      </Container>
+      {!formSubmitted ? (
+        <Typography variant="h3" sx={{ my: 7 }}>
+          Step 2: Create Your Unboxing Experience
+        </Typography>
+      ) : (
+        <Typography variant="h3" sx={{ my: 7 }}>
+          Your Campaign Has Been Added
+        </Typography>
+      )}
+      {!formSubmitted ? (
+        <Container>
+          <FormControl fullWidth>
+            <FirstPage
+              setCustomSelected={setCustomSelected}
+              formData={formData}
+              setFormData={setFormData}
+              status={status}
+              setFormSubmitted={setFormSubmitted}
+            />
+          </FormControl>
+        </Container>
+      ) : (
+        <Button variant="contained" component="label" sx={{ marginBottom: 3 }} onClick={() => setFormSubmitted(false)}>
+          Add Another Campaign
+        </Button>
+      )}
     </>
   );
 }

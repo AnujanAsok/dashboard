@@ -9,7 +9,8 @@ import Iconify from '../../../components/iconify';
 
 // ----------------------------------------------------------------------
 
-export default function LoginForm() {
+export default function LoginForm(props) {
+  const { setOnLogin } = props;
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -17,14 +18,18 @@ export default function LoginForm() {
   const [passwordInfo, setPasswordInfo] = useState('');
 
   const handleClick = async () => {
-    navigate('/dashboard', { replace: true });
-
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: emailInfo,
-      password: passwordInfo,
-    });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: emailInfo,
+        password: passwordInfo,
+      });
+      if (error) throw error;
+      navigate('/dashboard', { replace: true });
+      setOnLogin(false);
+    } catch (error) {
+      alert(error.error_description || error.message);
+    }
   };
-
   return (
     <>
       <Stack spacing={3}>
