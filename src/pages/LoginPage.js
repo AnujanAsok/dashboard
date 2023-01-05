@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet-async';
 import { styled } from '@mui/material/styles';
 import { Link, Container, Typography, Divider, Stack, Button, Modal, Box, TextField } from '@mui/material';
 // hooks
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import useResponsive from '../hooks/useResponsive';
 // components
 import Logo from '../components/logo';
@@ -55,10 +55,29 @@ const modalStyle = {
 
 // ----------------------------------------------------------------------
 
-export default function LoginPage() {
+export default function LoginPage(props) {
+  const { setStatus, setOnLogin, status } = props;
   const mdUp = useResponsive('up', 'md');
   const [openModal, setOpenModal] = useState(false);
   const [accountInfo, setAccountInfo] = useState({});
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('log in event tracker ', event);
+      setStatus({ ...status, userId: session?.user.id ?? null });
+      if (accountInfo.budget) {
+        setStatus({ ...status, budget: accountInfo.budget });
+      }
+    });
+
+    return () => {
+      authListener?.subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    setOnLogin(true);
+  }, []);
 
   const closeModalMenu = () => {
     setOpenModal(false);
@@ -66,10 +85,17 @@ export default function LoginPage() {
 
   const createAccount = async () => {
     setOpenModal(false);
-    const { data, error } = await supabase.auth.signUp({
+    const { data } = await supabase.auth.signUp({
       email: accountInfo.email,
       password: accountInfo.password,
+      options: {
+        data: {
+          full_name: accountInfo.full_name,
+          phone: accountInfo.phone,
+        },
+      },
     });
+    setStatus({ phone: accountInfo.phone });
   };
   return (
     <>
@@ -113,6 +139,25 @@ export default function LoginPage() {
                 <Typography variant="h6">Create an account</Typography>
                 <TextField
                   variant="outlined"
+                  label="Enter your full name"
+                  sx={{ m: 3, width: 500 }}
+                  onChange={(e) => setAccountInfo({ ...accountInfo, full_name: e.target.value })}
+                />
+                <TextField
+                  variant="outlined"
+                  label="Enter your phone number"
+                  sx={{ m: 3, width: 500 }}
+                  onChange={(e) => setAccountInfo({ ...accountInfo, phone: e.target.value })}
+                />
+
+                <TextField
+                  variant="outlined"
+                  label="What is your gifting budget?"
+                  sx={{ m: 3, width: 500 }}
+                  onChange={(e) => setAccountInfo({ ...accountInfo, budget: e.target.value })}
+                />
+                <TextField
+                  variant="outlined"
                   label="Enter your email name"
                   sx={{ m: 3, width: 500 }}
                   onChange={(e) => setAccountInfo({ ...accountInfo, email: e.target.value })}
@@ -149,7 +194,7 @@ export default function LoginPage() {
               </Typography>
             </Divider>
 
-            <LoginForm />
+            <LoginForm setOnLogin={setOnLogin} />
           </StyledContent>
         </Container>
       </StyledRoot>

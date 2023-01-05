@@ -77,7 +77,8 @@ function applySortFilter(array, comparator, query) {
   return stabilizedThis.map((el) => el[0]);
 }
 
-export default function UserPage() {
+export default function UserPage(props) {
+  const { status } = props;
   const [open, setOpen] = useState(null);
 
   const [page, setPage] = useState(0);
@@ -95,15 +96,14 @@ export default function UserPage() {
   const [campaignStats, setCampaignStats] = useState([]);
 
   const fetchMetrics = async () => {
-    const { data } = await supabase.from('campaigns').select('*');
+    const { data } = await supabase.from('campaigns').select('*').eq('client_id', status.userId);
     setCampaignStats(data);
+    console.log('status on campaign ', status);
   };
 
   useEffect(() => {
     fetchMetrics();
   }, []);
-
-  console.log('campaign stats', campaignStats);
 
   const USERLIST = campaignStats.map((stat, index) => ({
     name: stat.name,

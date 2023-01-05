@@ -1,3 +1,4 @@
+import { useState } from 'react';
 // routes
 import Router from './routes';
 // theme
@@ -9,11 +10,12 @@ import { StyledChart } from './components/chart';
 // ----------------------------------------------------------------------
 
 export default function App() {
+  const [status, setStatus] = useState({});
   return (
     <ThemeProvider>
       <ScrollToTop />
       <StyledChart />
-      <Router />
+      <Router setStatus={setStatus} status={status} />
     </ThemeProvider>
   );
 }
