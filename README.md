@@ -2,7 +2,7 @@
 
 ![license](https://img.shields.io/badge/license-MIT-blue.svg)
 
-> FReact Admin Dashboard made with Material-UI components and React.
+> React Admin Dashboard made with Material-UI components and React.
 
 ![preview](public/assets/preview.jpg)
 
